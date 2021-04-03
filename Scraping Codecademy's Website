@@ -1,0 +1,25 @@
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup
+
+prefix = "https://content.codecademy.com/courses/beautifulsoup/"
+website = requests.get('https://content.codecademy.com/courses/beautifulsoup/shellter.html', verify = False)
+soup = BeautifulSoup(website.content, 'html.parser')
+
+turtle_data = {}
+
+for link in soup.find_all('a') :
+    turtle_webpage = requests.get(prefix+link['href'], 'html.parser', verify = False)
+    turtle = BeautifulSoup(turtle_webpage.content)
+    turtle_name = turtle.select('.name')[0].get_text()
+    info = turtle.find('ul').get_text().split('\n')
+    detail_info = []
+    for i in info :
+        if i == '' :
+            continue
+        else :
+            detail_info.append(i)
+    turtle_data.update({turtle_name : detail_info})
+
+turtle_df = pd.DataFrame.from_dict(turtle_data, orient = 'index')
+print(turtle_df)
