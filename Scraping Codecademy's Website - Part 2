@@ -1,0 +1,43 @@
+import seaborn
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+website = requests.get('https://content.codecademy.com/courses/beautifulsoup/cacao/index.html', 'html.parses', verify = False)
+soup = BeautifulSoup(website.content)
+
+rating_data = []
+
+for rating in soup.select('.Rating')[1:] :
+    rating_data.append(float(rating.string))
+
+company_data = []
+    
+for company in soup.select('.Company')[1:] :
+    company_data.append(company.string)
+    
+cocoa_percentage = []
+
+for cocoa in soup.select('.CocoaPercent')[1:] :
+    cocoa_percentage.append(float(cocoa.string.strip('%')))
+
+dict = {'Company' : company_data, 'Rating' : rating_data}
+
+dict.update({'CocoaPercentage' : cocoa_percentage})
+
+df = pd.DataFrame.from_dict(dict)
+
+rating_average = df.groupby('Company').Rating.mean().round(2)
+
+ten_best = rating_average.nlargest(10)
+
+plt.clf()
+plt.scatter(df.CocoaPercentage, df.Rating)
+
+z = np.polyfit(df.CocoaPercentage, df.Rating, 1)
+line_function = np.poly1d(z)
+plt.plot(df.CocoaPercentage, line_function(df.CocoaPercentage), "r--")
+
+plt.show()
